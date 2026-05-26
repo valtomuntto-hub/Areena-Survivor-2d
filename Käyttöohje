@@ -1,0 +1,17 @@
+Peli alkaa aloitusvalikosta painamalla välilyöntiä.
+
+Pelaaja liikkuu nuolinäppäimillä areenalla.
+
+Tarkoituksena on kerätä kolikoita ja väistellä zombeja ja tuhota niitä.
+
+Zombit seuraavat pelaajaa automaattisesti.
+
+Pelaaja voi lyödä miekalla painamalla F‑näppäintä.
+
+Miekka tekee vahinkoa, jos sen hitbox osuu zombiin.
+
+Pelaajan elämänpisteet näkyy ruudun yläkulmassa.
+
+Peli päättyy, jos elämänpisteet loppuu tai kaikki zombit on voitettu.
+
+Pelistä voi poistua milloin tahansa painamalla ESC.
