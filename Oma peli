@@ -1,0 +1,21 @@
+# Areena survivor 2d 
+Lyhyt kuvaus:
+mitä ohjelma tekee ja kenelle se on tarkoitettu.  
+Ohjelma on ylhäältä päin kuvattu selviytymispeli, jossa pelaaja ohjaa soturia areenalla, kerää kolikoita ja taistelee zombeja vastaan.
+Peli on tarkoitettu kaikille, jotka haluavat kokeilla yksinkertaista toimintapeliä ja testata omaa selviytymiskykyään.
+ 
+## Käynnistäminen
+ 
+Peli käynnistyy suorittamalla Python‑tiedosto, jossa koodi on.
+Kun ohjelma avataan, näkyviin tulee aloitusvalikko, jossa peli alkaa painamalla välilyöntiä.
+Pelistä voi poistua milloin tahansa painamalla ESC.
+ 
+## Käyttö
+ 
+Pelaaja liikkuu nuolinäppäimillä ja kerää kolikoita pisteiden saamiseksi.
+Zombit seuraavat pelaajaa automaattisesti, ja niitä voi lyödä F‑näppäimellä.
+Pelaajan tulee väistellä zombeja ja vettä, koska niihin osuminen vähentää terveyttä tai pysäyttää liikkeen. 
+Peli alkaa painamalla välilyöntiä ja sen voi lopettaa ESC‑näppäimellä ihan missä vaiheessa peliä.
+
+Valto muntto
+2026
