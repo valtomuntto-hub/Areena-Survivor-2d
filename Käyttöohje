@@ -1,17 +1,9 @@
-Peli alkaa aloitusvalikosta painamalla välilyöntiä.
-
-Pelaaja liikkuu nuolinäppäimillä areenalla.
-
-Tarkoituksena on kerätä kolikoita ja väistellä zombeja ja tuhota niitä.
-
-Zombit seuraavat pelaajaa automaattisesti.
-
-Pelaaja voi lyödä miekalla painamalla F‑näppäintä.
-
-Miekka tekee vahinkoa, jos sen hitbox osuu zombiin.
-
-Pelaajan elämänpisteet näkyy ruudun yläkulmassa.
-
-Peli päättyy, jos elämänpisteet loppuu tai kaikki zombit on voitettu.
-
-Pelistä voi poistua milloin tahansa painamalla ESC.
+Peli käynnistetään avaamalla projektikansio Visual Studio Codessa ja suorittamalla komento python oma projekti terminaalissa.
+Ennen käynnistämistä tulee varmistaa, että Python ja Pygame on asennettu, ja että kaikki pelin kuvatiedostot ovat samassa kansiossa koodin kanssa.
+Kun peli käynnistyy, ruudulle tulee aloitusvalikko, jossa peli alkaa painamalla välilyöntiä.
+Pelaaja liikkuu nuolinäppäimillä ja voi lyödä miekalla painamalla F-näppäintä.
+Kolikot kerätään kävelemällä niiden päälle, ja ne antavat yhden pisteen sekä palauttavat elämää. 
+Zombit seuraavat pelaajaa automaattisesti ja tekevät vahinkoa osuessaan, ja niiden nopeus ja vahinko kasvavat pisteiden myötä.
+Pelaaja ei voi liikkua veteen.
+Peli päättyy, kun pelaajan elämät loppuvat tai kun pelaaja saavuttaa 20 pistettä, jolloin näkyviin tulee voittovalikko.
+Pelin voi lopettaa milloin tahansa painamalla ESC-näppäintä.
