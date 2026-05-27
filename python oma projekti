@@ -1,29 +1,37 @@
 import random
 import pygame
+
+# Käynnistetään pygame ja luodaan peli-ikkuna
 pygame.init()
 clock = pygame.time.Clock()
 width = 1000
 height = 667
 window = pygame.display.set_mode((width, height))
 
+# Ladataan taustakuva ja skaalataan se ikkunan kokoiseksi
 areena = pygame.image.load("753798_orig.jpg")
-
 areena = pygame.transform.scale(areena, (width, height))
 
+# Ladataan miekka ja skaalataan pienemmäksi
 Miekka = pygame.image.load("miekka-removebg-preview.png")
 Miekka = pygame.transform.scale(Miekka, (30, 30))
 
+# Ladataan zombin kuva
 zombie_img = pygame.image.load("zombie-removebg-preview.png")
 zombie_img = pygame.transform.scale(zombie_img, (60, 60))
 
+# Ladataan pelaajan hahmo
 soturi_img = pygame.image.load("soturi-removebg-preview.png")
 soturi_img = pygame.transform.scale(soturi_img, (90, 90))
 
+# Ladataan kolikko
 coin_img = pygame.image.load("coin-removebg-preview.png")
 coin_img = pygame.transform.scale(coin_img, (40, 40))
 
+# Pelaajan pisteet
 pisteet = 0
 
+# Mahdolliset paikat, joihin kolikko voi ilmestyä
 coin_spots = [
     (200, 200),
     (320, 260),
@@ -35,48 +43,58 @@ coin_spots = [
     (400, 430)
 ]
 
-
 def menu():
+    # Alkuvalikko – odottaa että pelaaja painaa SPACE
     font = pygame.font.SysFont(None, 60)
-    otsikko = font.render("Press space to start", True, (255, 255, 255))
+    otsikko = font.render("Paina välilyöntiä aloittaaksesi", True, (255, 255, 255))
 
     while True:
         for event in pygame.event.get():
+            # Sulkeminen ruksista
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
 
+            # ESC lopettaa pelin
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     quit()
 
+                # SPACE aloittaa pelin
                 if event.key == pygame.K_SPACE:
                     return
 
+        # Piirretään valikko
         window.blit(areena, (0, 0))
         window.blit(otsikko, (200, 300))
         pygame.display.flip()
 
-
-
 def voitto_valikko(pisteet):
+    # Näytetään voittoikkuna kun pelaaja saavuttaa tavoitepisteet
     font_iso = pygame.font.SysFont(None, 70)
     font_pieni = pygame.font.SysFont(None, 40)
+
     otsikko = font_iso.render("VOITIT PELIN!", True, (255, 255, 0))
     piste_teksti = font_pieni.render(f"Pisteet: {pisteet}", True, (255, 255, 255))
     ohje = font_pieni.render("SPACE = Pelaa uudelleen   ESC = Poistu", True, (255, 255, 255))
+
     while True:
         for event in pygame.event.get():
+            # Sulkeminen
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
+
+            # SPACE aloittaa uudelleen, ESC lopettaa
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     return
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     quit()
+
+        # Piirretään voittoikkuna
         window.blit(areena, (0, 0))
         window.blit(otsikko, (300, 200))
         window.blit(piste_teksti, (350, 300))
@@ -84,12 +102,14 @@ def voitto_valikko(pisteet):
         pygame.display.flip()
 
 def onko_vesi(x, y):
+    # Tarkistaa onko pikseli sininen → vesi
     if x < 0 or x >= width or y < 0 or y >= height:
         return True
     r, g, b, *rest = areena.get_at((int(x), int(y)))
     return b > 150 and b > r and b > g
 
 def lataa_highscore():
+    # Lukee highscoren tiedostosta
     try:
         with open("highscore", "r") as f:
             return int(f.read())
@@ -97,38 +117,64 @@ def lataa_highscore():
         return 0
 
 def tallenna_highscore(score):
+    # Tallentaa highscoren tiedostoon
     with open("highscore", "w") as f:
         f.write(str(score))
+
+def luo_vihollinen():
+    # Luo yhden zombin satunnaiseen paikkaan
+    x = random.randint(100, 900)
+    y = random.randint(100, 500)
+    rect = pygame.Rect(x, y, 60, 60)
+    return {
+        "x": float(x),
+        "y": float(y),
+        "rect": rect,
+        "health": 3
+    }
+
+def laske_vaikeustaso(pisteet):
+    # Vaikeustaso nousee joka 10 pisteen kohdalla
+    return pisteet // 10
+
+def laske_zombi_nopeus(pisteet, vesi):
+    # Zombit nopeutuvat pisteiden mukaan
+    taso = laske_vaikeustaso(pisteet)
+    nopeus_maalla = 0.5 + taso * 0.1
+    if vesi:
+        return nopeus_maalla * 0.45
+    return nopeus_maalla
+
+def laske_vihollisen_vahinko(pisteet):
+    # Zombit tekevät enemmän vahinkoa vaikeustason noustessa
+    return 30 + laske_vaikeustaso(pisteet) * 5
+
+def laske_vahinko_cooldown(pisteet):
+    # Zombit osuvat nopeammin korkeammalla tasolla
+    return max(600, 1000 - laske_vaikeustaso(pisteet) * 100)
 
 def main():
     global pisteet
     highscore = lataa_highscore()
 
-    
-
+    # Pelaajan aloitushealth
     soturi_health = 200
     damage_cooldown = 1
 
+    # Lyönnin cooldown
     lyonti_cooldown = 0
-    lyonti_vali = 300  # ms
+    lyonti_vali = 300
+    voitto_pisteet = 20
 
-    viholliset = []
-    for i in range(4):
-        x = random.randint(100, 900)
-        y = random.randint(100, 500)
-        rect = pygame.Rect(x, y, 60, 60)
-        viholliset.append({
-            "x": float(x),
-            "y": float(y),
-            "rect": rect,
-            "health": 3
-        })
+    # Luodaan 4 vihollista
+    viholliset = [luo_vihollinen() for _ in range(4)]
 
+    # Pelaajan aloituspaikka
     soturi_x = float(200)
     soturi_y = float(200)
     soturi_rect = pygame.Rect(soturi_x + 20, soturi_y + 20, 50, 70)
 
-    # Coin aloittaa jostain valmiista paikasta
+    # Kolikon aloituspaikka
     coin_rect = pygame.Rect(0, 0, 40, 40)
     coin_rect.x, coin_rect.y = random.choice(coin_spots)
 
@@ -136,6 +182,7 @@ def main():
     while running:
         nyky_time = pygame.time.get_ticks()
 
+        # Tapahtumien käsittely
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -148,9 +195,11 @@ def main():
 
         keys = pygame.key.get_pressed()
 
+        # Tallennetaan vanha sijainti → jos pelaaja menee veteen, palautetaan
         vanha_x = soturi_x
         vanha_y = soturi_y
 
+        # Pelaajan liike
         pelaaja_nopeus = 1
         if keys[pygame.K_LEFT]:
             soturi_x -= pelaaja_nopeus
@@ -161,18 +210,18 @@ def main():
         if keys[pygame.K_DOWN]:
             soturi_y += pelaaja_nopeus
 
+        # Päivitetään pelaajan hitbox
         soturi_rect.x = int(soturi_x + 20)
         soturi_rect.y = int(soturi_y + 20)
 
-        center_x = soturi_rect.centerx
-        center_y = soturi_rect.centery
-        if onko_vesi(center_x, center_y):
+        # Tarkistetaan osuuko pelaaja veteen
+        if onko_vesi(soturi_rect.centerx, soturi_rect.centery):
             soturi_x = vanha_x
             soturi_y = vanha_y
             soturi_rect.x = int(soturi_x + 20)
             soturi_rect.y = int(soturi_y + 20)
 
-        # MIEKKA
+        # Miekan suunta riippuu liikkeestä
         miekka_rot = Miekka
         miekka_x = soturi_x + 35
         miekka_y = soturi_y + 25
@@ -194,104 +243,117 @@ def main():
             miekka_x = soturi_x + 25
             miekka_y = soturi_y + 55
 
+        # Miekan osuma-alue
         miekka_hitbox = pygame.Rect(miekka_x, miekka_y, 30, 30)
 
-        # LYÖNTI (F)
+        # Lyönti (F)
         lyonti = False
         if keys[pygame.K_f] and nyky_time > lyonti_cooldown:
             lyonti = True
             lyonti_cooldown = nyky_time + lyonti_vali
 
-        # ZOMBIEN LIIKE
-        zombi_nopeus = 0.5
+        # Zombien liike kohti pelaajaa
+        vaikeustaso = laske_vaikeustaso(pisteet)
         for z in viholliset:
+            vesi = onko_vesi(z["rect"].centerx, z["rect"].centery)
+            zombi_nopeus = laske_zombi_nopeus(pisteet, vesi)
+
             dx = soturi_x - z["x"]
             dy = soturi_y - z["y"]
             etaisyys = max(1, (dx*dx + dy*dy) ** 0.5)
-            suunta_x = dx / etaisyys
-            suunta_y = dy / etaisyys
-            z["x"] += suunta_x * zombi_nopeus
-            z["y"] += suunta_y * zombi_nopeus
+
+            z["x"] += dx / etaisyys * zombi_nopeus
+            z["y"] += dy / etaisyys * zombi_nopeus
+
             z["rect"].x = int(z["x"])
             z["rect"].y = int(z["y"])
 
-        # DAMAGE 
+        # Zombin tekemä vahinko
         for z in viholliset:
             if soturi_rect.colliderect(z["rect"]):
                 if nyky_time >= damage_cooldown:
-                    soturi_health -= 30
-                    damage_cooldown = nyky_time + 1000
+                    soturi_health -= laske_vihollisen_vahinko(pisteet)
+                    damage_cooldown = nyky_time + laske_vahinko_cooldown(pisteet)
+
                     if soturi_health <= 0:
                         pygame.quit()
                         quit()
 
-
-        # COIN KERÄYS – piste + respawn
+        # Kolikon keräys
         if coin_rect.colliderect(soturi_rect):
             pisteet += 1
+            soturi_health = min(200, soturi_health + 50)
             coin_rect.x, coin_rect.y = random.choice(coin_spots)
 
-        # LYÖNTI OSUU VIHOLLISEEN
+        # Lyönti osuu viholliseen
         for z in viholliset[:]:
             if lyonti and miekka_hitbox.colliderect(z["rect"]):
                 z["health"] -= 1
                 if z["health"] <= 0:
                     viholliset.remove(z)
                     pisteet += 1
-                    if not viholliset:
-                        # päivitetään highscore ENSIN, nyt mukana myös viimeinen piste
-                        if pisteet > highscore:
-                            highscore = pisteet
-                            tallenna_highscore(highscore)
-                        voitto_valikko(pisteet)
-                        pisteet = 0
-                        return
+                    viholliset.append(luo_vihollinen())
 
-        # Highscore – nyt kaikkien pisteiden lisäysten jälkeen
+        # Highscore päivittyy
         if pisteet > highscore:
             highscore = pisteet
             tallenna_highscore(highscore)
 
-        # PIIRTO
+        # Voitto
+        if pisteet >= voitto_pisteet:
+            voitto_valikko(pisteet)
+            pisteet = 0
+            return
+
+        # Piirretään tausta
         window.blit(areena, (0, 0))
 
-        # Zombit + niiden healthbarit
+        # Piirretään zombit ja niiden healthbarit
         for z in viholliset:
             window.blit(zombie_img, (z["rect"].x, z["rect"].y))
+
             max_zombie_health = 3
             bar_width = 40
             bar_height = 6
             hp_ratio = z["health"] / max_zombie_health
+
             pygame.draw.rect(window, (0, 0, 0), (z["rect"].x + 10, z["rect"].y - 10, bar_width, bar_height))
             pygame.draw.rect(window, (255, 0, 0), (z["rect"].x + 10, z["rect"].y - 10, bar_width * hp_ratio, bar_height))
             pygame.draw.rect(window, (255, 255, 255), (z["rect"].x + 10, z["rect"].y - 10, bar_width, bar_height), 2)
-        
-        # Coin, soturi, miekka
+
+        # Piirretään kolikko, pelaaja ja miekka
         window.blit(coin_img, (coin_rect.x, coin_rect.y))
         window.blit(soturi_img, (soturi_x, soturi_y))
         window.blit(miekka_rot, (miekka_x, miekka_y))
 
-        # Pisteet ja health
+        # Piirretään pisteet, highscore, vaikeustaso ja health
         max_hp = 200
         bar_width = 200
         bar_height = 20
         hp_ratio = soturi_health / max_hp
+
         font = pygame.font.SysFont(None, 40)
+
         teksti = font.render(f"Pisteet: {pisteet}", True, (255, 255, 255))
         window.blit(teksti, (10, 10))
+
         hs_txt = font.render(f"Paras tulos: {highscore}", True, (255, 255, 0))
         window.blit(hs_txt, (10, 40))
 
-        health_txt = font.render(f"Elämänpisteet: {soturi_health}", True, (255, 50, 50))
-        window.blit(health_txt, (10, 80))
+        vaikeus_txt = font.render(f"Vaikeustaso: {vaikeustaso + 1}", True, (255, 180, 80))
+        window.blit(vaikeus_txt, (10, 70))
 
-        pygame.draw.rect(window, (0, 0, 0), (10, 110, bar_width, bar_height))
-        pygame.draw.rect(window, (255, 0, 0), (10, 110, bar_width * hp_ratio, bar_height))
-        pygame.draw.rect(window, (255, 255, 255), (10, 110, bar_width, bar_height), 2)
+        health_txt = font.render(f"Elämänpisteet: {soturi_health}", True, (255, 50, 50))
+        window.blit(health_txt, (10, 100))
+
+        pygame.draw.rect(window, (0, 0, 0), (10, 130, bar_width, bar_height))
+        pygame.draw.rect(window, (255, 0, 0), (10, 130, bar_width * hp_ratio, bar_height))
+        pygame.draw.rect(window, (255, 255, 255), (10, 130, bar_width, bar_height), 2)
 
         pygame.display.flip()
         clock.tick(60)
 
+# Käynnistetään peli
 menu()
 while True:
     main()
