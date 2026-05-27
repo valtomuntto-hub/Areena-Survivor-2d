@@ -1,30 +1,30 @@
 import random
 import pygame
 
-# Käynnistetään pygame ja luodaan peli-ikkuna
+# Käynnistää pygame ja luo peli-ikkuna
 pygame.init()
 clock = pygame.time.Clock()
 width = 1000
 height = 667
 window = pygame.display.set_mode((width, height))
 
-# Ladataan taustakuva ja skaalataan se ikkunan kokoiseksi
+# Lataa taustakuvan ja skaalaa sen ikkunan kokoiseksi
 areena = pygame.image.load("753798_orig.jpg")
 areena = pygame.transform.scale(areena, (width, height))
 
-# Ladataan miekka ja skaalataan pienemmäksi
+# Lataa miekka ja skaalaa pienemmäksi
 Miekka = pygame.image.load("miekka-removebg-preview.png")
 Miekka = pygame.transform.scale(Miekka, (30, 30))
 
-# Ladataan zombin kuva
+# Lataa zombin kuva
 zombie_img = pygame.image.load("zombie-removebg-preview.png")
 zombie_img = pygame.transform.scale(zombie_img, (60, 60))
 
-# Ladataan pelaajan hahmo
+# Lataa pelaajan hahmo
 soturi_img = pygame.image.load("soturi-removebg-preview.png")
 soturi_img = pygame.transform.scale(soturi_img, (90, 90))
 
-# Ladataan kolikko
+# Lataa kolikko
 coin_img = pygame.image.load("coin-removebg-preview.png")
 coin_img = pygame.transform.scale(coin_img, (40, 40))
 
@@ -71,7 +71,7 @@ def menu():
         pygame.display.flip()
 
 def voitto_valikko(pisteet):
-    # Näytetään voittoikkuna kun pelaaja saavuttaa tavoitepisteet
+    # Näyttää voittoikkuna kun pelaaja saavuttaa tavoitepisteet 20
     font_iso = pygame.font.SysFont(None, 70)
     font_pieni = pygame.font.SysFont(None, 40)
 
@@ -94,7 +94,7 @@ def voitto_valikko(pisteet):
                     pygame.quit()
                     quit()
 
-        # Piirretään voittoikkuna
+        # Piirtää voittoikkunan
         window.blit(areena, (0, 0))
         window.blit(otsikko, (300, 200))
         window.blit(piste_teksti, (350, 300))
@@ -102,7 +102,7 @@ def voitto_valikko(pisteet):
         pygame.display.flip()
 
 def onko_vesi(x, y):
-    # Tarkistaa onko pikseli sininen → vesi
+    # Tarkistaa onko pikseli sininen > vesi
     if x < 0 or x >= width or y < 0 or y >= height:
         return True
     r, g, b, *rest = areena.get_at((int(x), int(y)))
@@ -138,7 +138,7 @@ def laske_vaikeustaso(pisteet):
     return pisteet // 10
 
 def laske_zombi_nopeus(pisteet, vesi):
-    # Zombit nopeutuvat pisteiden mukaan
+    # laskee zombien nopeuden pisteiden ja siitä, onko zombi vedessä vai maalla. Zombit liikkuvat nopeammin maalla ja hitaammin vedessä.
     taso = laske_vaikeustaso(pisteet)
     nopeus_maalla = 0.5 + taso * 0.1
     if vesi:
@@ -166,7 +166,7 @@ def main():
     lyonti_vali = 300
     voitto_pisteet = 20
 
-    # Luodaan 4 vihollista
+    # Luo 4 vihollista
     viholliset = [luo_vihollinen() for _ in range(4)]
 
     # Pelaajan aloituspaikka
@@ -195,7 +195,7 @@ def main():
 
         keys = pygame.key.get_pressed()
 
-        # Tallennetaan vanha sijainti → jos pelaaja menee veteen, palautetaan
+        # Tallennetaa vanhan sijainnin → jos pelaaja menee veteen, palautetaan
         vanha_x = soturi_x
         vanha_y = soturi_y
 
@@ -257,11 +257,12 @@ def main():
         for z in viholliset:
             vesi = onko_vesi(z["rect"].centerx, z["rect"].centery)
             zombi_nopeus = laske_zombi_nopeus(pisteet, vesi)
-
+            # dx = pelaajan x‑sijainti miinus zombin x‑sijainti
+            #dy = pelaajan y‑sijainti miinus zombin y‑sijainti
             dx = soturi_x - z["x"]
             dy = soturi_y - z["y"]
             etaisyys = max(1, (dx*dx + dy*dy) ** 0.5)
-
+            # tällä lasketaan etäisyys, jotta zombi ei liiku liian nopeasti, jos pelaaja on lähellä.
             z["x"] += dx / etaisyys * zombi_nopeus
             z["y"] += dy / etaisyys * zombi_nopeus
 
@@ -305,10 +306,10 @@ def main():
             pisteet = 0
             return
 
-        # Piirretään tausta
+        # Piirtää taustan
         window.blit(areena, (0, 0))
 
-        # Piirretään zombit ja niiden healthbarit
+        # Piirtää zombit ja niiden healthbarit
         for z in viholliset:
             window.blit(zombie_img, (z["rect"].x, z["rect"].y))
 
@@ -321,12 +322,12 @@ def main():
             pygame.draw.rect(window, (255, 0, 0), (z["rect"].x + 10, z["rect"].y - 10, bar_width * hp_ratio, bar_height))
             pygame.draw.rect(window, (255, 255, 255), (z["rect"].x + 10, z["rect"].y - 10, bar_width, bar_height), 2)
 
-        # Piirretään kolikko, pelaaja ja miekka
+        # Piirtää kolikon, pelaajan ja miekan
         window.blit(coin_img, (coin_rect.x, coin_rect.y))
         window.blit(soturi_img, (soturi_x, soturi_y))
         window.blit(miekka_rot, (miekka_x, miekka_y))
 
-        # Piirretään pisteet, highscore, vaikeustaso ja health
+        # Piirtää pisteet, highscoren, vaikeustason ja elämänpisteet
         max_hp = 200
         bar_width = 200
         bar_height = 20
